@@ -1,9 +1,7 @@
-FILE* fp;
-
-    // fp = fopen(fileName, "r");
-    // if (fp == NULL)
-    // {
-    //     printf("ERROR OPENING FILE \"%s\"\n\n", fileName);
-    //     return 0;
-    // }
-    // fclose(fp);
+tag = strtok(tag, " ");
+            printf("debug tag == ");
+            for(i = 0; i < 1000; i++)
+            {
+                printf("%c", tag[i]);
+            }
+            printf("\n");
