@@ -5,7 +5,7 @@
         <gdppc>141100</gdppc> 
         <neighbor name="Austria" direction="E"/>
         <neighbor name="Switzerland" direction="W"/>
-        <level>1
+        <level>1</level>
     </country>
     <country name="Singapore">
         <rank>4</rank>

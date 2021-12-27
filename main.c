@@ -8,8 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define M 100             // set number of childs here
-// #define ifInDebugMode 1 // debug mode activation
+#define M 20               // set number of childs nodes here 
+//bigger the number of child nodes, the safer the program is but also the more memory it requires
+
 FILE* fp = NULL;
 
 typedef struct node
@@ -18,37 +19,38 @@ typedef struct node
     struct node *child[M]; 
 } tree;
 
+tree* emergencyRoot;        //for emergency program termination
+
 tree* parse(tree* root, char* tag);
 void traverse(tree* root, int level);
+void freeTree(tree* root);
 
 int main (void)
 {
-    // system("tput clear");
+    system("tput clear");
 
     //getting input for file Name
     char* fileName = (char*) malloc (sizeof(char) * 1000); 
     printf("Please enter an XML file name: ");
     fgets(fileName, 1000, stdin);
     fileName = strtok(fileName, "\n");      //removes '\n' from fileName
-    // printf("debug string == %s\n", fileName);
 
     //opening file
     fp = fopen(fileName, "r");
     if (fp == NULL)
     {
-        printf("ERROR OPENING FILE \"%s\"\n\n", fileName);
+        printf("\nERROR OPENING FILE \"%s\"\nNo such file exists...\n", fileName);
         free(fileName);
         return 0;
     }
 
     //creating root
-    // printf("debug1\n");
     tree* root = (tree*) malloc(sizeof(tree));
+    emergencyRoot = root;   
     int i;
     for(i = 0; i < M; i++)
     {
         root -> child[i] = NULL;
-        // printf("debug child[%d] == %s\n", i,tree -> child[i]);
     }
 
     // i = 0;
@@ -70,7 +72,6 @@ int main (void)
                 c = fgetc(fp);
                 if(c != '>')
                 {
-                    // printf("debug i == %d\n", i);
                     tag[i] = c;
                     i++;
                 }
@@ -79,29 +80,19 @@ int main (void)
             parse(root, tag);
         }
     }
-    // printf("debug after while i == %d\n", i);
+    printf("\n");
+    traverse(root, 0); //prints tag tree
 
-    //         tag = strtok(tag, " ");
-    //         printf("debug tag == ");
-    //         for(i = 0; i < 1000; i++)
-    //         {
-    //             // printf("debug 333\n"); 
-    //                 // printf("debug i == %d\n", i);
-
-    //             printf("%c", tag[i]);
-    //         }
-    //         printf("\n");
-    // printf("debug2\n");
-
-
-    traverse(root, 0);
+    //safely closes file and frees allocated memory
     fclose(fp);
+    free(fileName);
+    freeTree(root);
     return 0;
 }
 
 tree* parse(tree* root, char* tag)
 {
-    printf("debug tag11 == %s\n", tag);
+    // printf("debug tag11 == %s\n", tag);
     int i, empty=1;
     for(i = 0; i < M; i++)
     {
@@ -134,16 +125,13 @@ tree* parse(tree* root, char* tag)
         }while(!feof(fp) && c != '<');
         c = fgetc(fp);
 
-        //start of tag
-        // s=strchr(tag,'<'); //needs change here
-        
         int closingTag;     //boolean
-        if(c == '/')    //bypasses '/' 
+        if(c == '/')        //bypasses first character (which is '/')
         {
             closingTag = 1;
             i = 0;
         }
-        else            //stores first character
+        else                //stores first character
         {
             closingTag = 0;
             tag2[0] = c;
@@ -174,19 +162,19 @@ tree* parse(tree* root, char* tag)
         
         if(closingTag) //tag closes </>
         {
-            // c = fgetc(fp); //bypasses '/' 
-            printf("debug tag1 == %s\n", tag);
-            printf("debug tag2 == %s\n", tag2);
-
+            // printf("debug tag1 == %s\n", tag);
+            // printf("debug tag2 == %s\n", tag2);
             if(strcmp(root->data,tag2) == 0)
             {
                 return root;
             }
             else
             {
-                printf("Tags in files are not properly nested.\n");
+                printf("ERROR: Tags in file are not properly nested.\n");
                 printf("Terminating Programm...\n");
-                exit(1);// check later
+                fclose(fp);
+                freeTree(emergencyRoot);
+                exit(1);
             }
         }
         else
@@ -204,7 +192,7 @@ tree* parse(tree* root, char* tag)
                     break;
                 }
             }
-            printf("debug before if k  == %d\n", k);
+            
             if(k==M) //above didnt work didnt find tag
             {
                 for(i = 0; i < M; i++)
@@ -212,7 +200,7 @@ tree* parse(tree* root, char* tag)
                     if(root -> child[i] == NULL)
                     {
                         k=i;
-                        printf("debug before malloc k  == %d\n", k);
+                        // printf("debug before malloc k  == %d\n", k);
                         root->child[i]= (tree*) malloc(sizeof(tree)); //so that its not NULL anymore
 
                         break;
@@ -220,18 +208,15 @@ tree* parse(tree* root, char* tag)
                 }
             }
 
-            printf("debug tag22 == %s\n", tag2);
-            printf("debug after k  == %d\n", k);
+            // printf("debug tag22 == %s\n", tag2);
             if(single)
             {
-                printf("debug before segm\n");
-                root->child[k]-> data =(char*) malloc(sizeof(char) * strlen(tag2));
+                root->child[k]-> data = (char*) malloc(sizeof(char) * strlen(tag2));
                 strcpy(root->child[k]->data,tag2);
-                printf("debug after segm\n");
             }
             else
             {
-                root->child[k]= parse(root->child[k],tag2);
+                root->child[k] = parse(root->child[k],tag2);
             }
         }
     }  
@@ -254,4 +239,18 @@ void traverse(tree* root, int level)
             traverse(root -> child[i], level + 1);
         }
     }
+}
+
+void freeTree(tree* root)
+{
+    int i;
+    for(i = 0; i < M; i++)
+    {
+        if(root->child[i] != NULL)
+        {
+            freeTree(root->child[i]);
+        }
+    }
+    free(root->data);
+    free(root);
 }
