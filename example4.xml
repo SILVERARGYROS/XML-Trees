@@ -1,0 +1,17 @@
+<Employee> 
+    <Name> 
+        <First>Lassi</First> 
+        <Last>Lehto</Last> 
+    </Name> 
+    <Email>Lassi.Lehto@fgi.fi</Email> 
+    <Organization> 
+        <Name> 
+            Finnish Geodetic Institute 
+        </Name> 
+        <Address> 
+            PO Box 15, 
+            FIN-02431 Masala 
+        </Address> 
+        <Country CountryCode="358">Finland</Country> 
+    </Organization> 
+</Employee> 

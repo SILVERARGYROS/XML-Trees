@@ -19,7 +19,7 @@ typedef struct node
     struct node *child[M]; 
 } tree;
 
-tree* emergencyRoot;        //for emergency program termination
+tree* emergencyRoot;        //for emergency program termination for freeing all the tree
 
 tree* parse(tree* root, char* tag);
 void traverse(tree* root, int level);
@@ -43,6 +43,7 @@ int main (void)
         free(fileName);
         return 0;
     }
+    free(fileName);
 
     //creating root
     tree* root = (tree*) malloc(sizeof(tree));
@@ -85,8 +86,8 @@ int main (void)
 
     //safely closes file and frees allocated memory
     fclose(fp);
-    free(fileName);
     freeTree(root);
+    free(tag);
     return 0;
 }
 
@@ -166,6 +167,7 @@ tree* parse(tree* root, char* tag)
             // printf("debug tag2 == %s\n", tag2);
             if(strcmp(root->data,tag2) == 0)
             {
+                free(tag2);
                 return root;
             }
             else
@@ -174,6 +176,8 @@ tree* parse(tree* root, char* tag)
                 printf("Terminating Programm...\n");
                 fclose(fp);
                 freeTree(emergencyRoot);
+                free(tag);
+                free(tag2);
                 exit(1);
             }
         }
